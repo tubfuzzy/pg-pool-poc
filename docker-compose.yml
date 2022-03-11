@@ -15,24 +15,29 @@ services:
       - DB_PASSWORD=postgres
       - MASTER_NODE_HOSTNAME=db-master
       - REPLICA_NODE_HOSTNAME_0=db-node0
-      - CLUSTER_MODE=true
   
   db-master:
     restart: 'always'
-    image: postgres
+    image: postgres:14
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./data/master:/var/lib/postgresql/data
       
   db-node0: 
     restart: 'always'
-    image: postgres
+    image: postgres:14
     ports:
       - "5433:5432"
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./data/1:/var/lib/postgresql/data
+      # - ./config/postgres-slave.conf:/etc/postgresql/postgresql.conf
+      # - ./config/postgres_hba.conf:/etc/postgresql/pg_hba.conf
