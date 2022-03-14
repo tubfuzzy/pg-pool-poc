@@ -13,31 +13,37 @@ services:
       - DB_NAME=postgres
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgres
-      - MASTER_NODE_HOSTNAME=db-master
-      - REPLICA_NODE_HOSTNAME_0=db-node0
-  
-  db-master:
-    restart: 'always'
-    image: postgres:14
+      - MASTER_NODE_HOSTNAME=postgresql-master
+      - REPLICA_NODE_HOSTNAME_0=postgresql-slave
+  postgresql-master:
+    image: docker.io/bitnami/postgresql:14
     ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - '5432'
     volumes:
-      - ./data/master:/var/lib/postgresql/data
-      
-  db-node0: 
-    restart: 'always'
-    image: postgres:14
+      - 'postgresql_master_data:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=postgres
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=postgres
+      - ALLOW_EMPTY_PASSWORD=yes
+  postgresql-slave:
+    image: docker.io/bitnami/postgresql:14
     ports:
-      - "5433:5432"
+      - '5432'
+    depends_on:
+      - postgresql-master
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - ./data/1:/var/lib/postgresql/data
-      # - ./config/postgres-slave.conf:/etc/postgresql/postgresql.conf
-      # - ./config/postgres_hba.conf:/etc/postgresql/pg_hba.conf
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=postgres
+      - POSTGRESQL_MASTER_HOST=postgresql-master
+      - POSTGRESQL_PASSWORD=postgres
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - ALLOW_EMPTY_PASSWORD=yes
+
+volumes:
+  postgresql_master_data:
+    driver: local
